@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HEARTH ORACLE — 24 Gods Answer</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&family=JetBrains+Mono:wght@400;600;700&family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  :root { color-scheme: dark; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: 'Inter', system-ui, sans-serif; background:#020208; overflow-x:hidden; }
+  .font-cinzel { font-family: 'Cinzel', serif; }
+  .font-mono { font-family: 'JetBrains Mono', monospace; }
+
+  #particle-canvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+
+  .glass { backdrop-filter: blur(20px) saturate(180%); -webkit-backdrop-filter: blur(20px) saturate(180%); }
+
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:none} }
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  @keyframes pulseGlow { 0%,100%{filter:drop-shadow(0 0 8px currentColor)} 50%{filter:drop-shadow(0 0 24px currentColor) drop-shadow(0 0 48px currentColor)} }
+  @keyframes dragonFly { 0%{transform:translate(0,0) rotate(0deg)} 25%{transform:translate(10px,-15px) rotate(5deg)} 50%{transform:translate(0,-25px) rotate(0deg)} 75%{transform:translate(-10px,-15px) rotate(-5deg)} 100%{transform:translate(0,0) rotate(0deg)} }
+  @keyframes quorumSpin { 0%{transform:rotate(0deg) scale(1)} 50%{transform:rotate(180deg) scale(1.15)} 100%{transform:rotate(360deg) scale(1)} }
+  @keyframes typing { from{width:0} to{width:100%} }
+  @keyframes shimmer { 0%{background-position:-200% center} 100%{background-position:200% center} }
+  @keyframes scorePop { 0%{transform:scale(1)} 50%{transform:scale(1.4)} 100%{transform:scale(1)} }
+  @keyframes eggBreathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+  @keyframes ringPulse { 0%{stroke-dashoffset:0} 100%{stroke-dashoffset:100} }
+  @keyframes godReveal { 0%{opacity:0;transform:scale(0.5) rotate(-10deg)} 100%{opacity:1;transform:scale(1) rotate(0deg)} }
+  @keyframes oracleGlow { 0%,100%{box-shadow:0 0 20px rgba(168,85,247,0.3)} 50%{box-shadow:0 0 60px rgba(168,85,247,0.6),0 0 120px rgba(168,85,247,0.2)} }
+  @keyframes questionFloat { 0%,100%{transform:translateY(0) rotate(0deg)} 50%{transform:translateY(-12px) rotate(1deg)} }
+
+  .animate-fadeInUp { animation: fadeInUp 0.6s cubic-bezier(.2,.8,.2,1) both; }
+  .animate-float { animation: float 4s ease-in-out infinite; }
+  .animate-pulseGlow { animation: pulseGlow 2s ease-in-out infinite; }
+  .animate-dragon { animation: dragonFly 6s ease-in-out infinite; }
+  .animate-quorum { animation: quorumSpin 3s linear infinite; }
+  .animate-shimmer { background-size:200% auto; animation: shimmer 3s linear infinite; }
+  .animate-scorePop { animation: scorePop 0.4s cubic-bezier(.2,.8,.2,1); }
+  .animate-eggBreathe { animation: eggBreathe 3s ease-in-out infinite; }
+  .animate-godReveal { animation: godReveal 0.5s cubic-bezier(.2,.8,.2,1) both; }
+  .animate-oracleGlow { animation: oracleGlow 2s ease-in-out infinite; }
+  .animate-questionFloat { animation: questionFloat 3s ease-in-out infinite; }
+
+  .transcript::-webkit-scrollbar { width:5px }
+  .transcript::-webkit-scrollbar-track { background:transparent }
+  .transcript::-webkit-scrollbar-thumb { background:linear-gradient(180deg,#6366f1,#a855f7); border-radius:10px }
+
+  .city-card { position:relative; overflow:hidden; transition: all 0.5s cubic-bezier(.2,.8,.2,1); }
+  .city-card::before { content:''; position:absolute; inset:0; background: radial-gradient(circle at 50% 50%, rgba(255,255,255,0.04) 0%, transparent 70%); pointer-events:none; }
+  .city-card:hover { transform:translateY(-4px); }
+  .city-card.active-city { box-shadow: 0 0 60px -10px var(--city-glow); }
+
+  .score-bar { height:6px; border-radius:999px; background:rgba(255,255,255,0.08); overflow:hidden; position:relative; }
+  .score-fill { height:100%; border-radius:999px; transition: width 1s cubic-bezier(.2,.8,.2,1); position:relative; }
+  .score-fill::after { content:''; position:absolute; inset:0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent); animation: shimmer 2s linear infinite; }
+
+  .dragon-svg { filter: drop-shadow(0 0 12px var(--dragon-color)); }
+
+  .msg-enter { animation: fadeInUp 0.5s cubic-bezier(.2,.8,.2,1) both; }
+
+  .header-grad { background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(168,85,247,0.1), rgba(236,72,153,0.15)); }
+
+  /* QUESTION INPUT */
+  .question-input-wrapper {
+    position:relative;
+  }
+  .question-input {
+    width:100%;
+    background: rgba(255,255,255,0.03);
+    border: 2px solid rgba(168,85,247,0.3);
+    border-radius: 16px;
+    padding: 16px 56px 16px 20px;
+    color: white;
+    font-family: 'Cinzel', serif;
+    font-size: 16px;
+    outline: none;
+    transition: all 0.4s cubic-bezier(.2,.8,.2,1);
+  }
+  .question-input:focus {
+    border-color: rgba(168,85,247,0.8);
+    box-shadow: 0 0 40px rgba(168,85,247,0.2), inset 0 0 40px rgba(168,85,247,0.05);
+    background: rgba(255,255,255,0.05);
+  }
+  .question-input::placeholder { color: rgba(255,255,255,0.25); font-style: italic; }
+  .question-submit {
+    position:absolute;
+    right:8px;
+    top:50%;
+    transform:translateY(-50%);
+    width:40px;
+    height:40px;
+    border-radius:12px;
+    background: linear-gradient(135deg, #a855f7, #6366f1);
+    border:none;
+    color:white;
+    font-size:18px;
+    cursor:pointer;
+    transition: all 0.3s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .question-submit:hover { transform:translateY(-50%) scale(1.1); box-shadow: 0 0 30px rgba(168,85,247,0.5); }
+  .question-submit:active { transform:translateY(-50%) scale(0.95); }
+
+  /* GOD RESPONSE CARDS */
+  .god-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 12px;
+    padding: 12px 16px;
+    transition: all 0.3s;
+  }
+  .god-card:hover {
+    background: rgba(255,255,255,0.05);
+    border-color: rgba(255,255,255,0.15);
+  }
+
+  /* ORACLE MODE OVERLAY */
+  .oracle-active .city-card { animation: oracleGlow 2s ease-in-out infinite; }
+  .oracle-active .egg-text { animation: pulseGlow 1s ease-in-out infinite !important; }
+
+  /* GOD GRID */
+  .gods-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 10px;
+  }
+</style>
+</head>
+<body class="text-zinc-100 selection:bg-fuchsia-500/40 selection:text-white">
+
+<canvas id="particle-canvas"></canvas>
+
+<div class="relative z-10 min-h-screen flex flex-col">
+
+  <!-- ===== HEADER ===== -->
+  <header class="sticky top-0 z-50 border-b border-white/10 bg-black/80 glass">
+    <div class="max-w-[1800px] mx-auto px-4 py-3">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <div class="relative">
+            <div class="w-3 h-3 rounded-full bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-amber-400 animate-pulse"></div>
+            <div class="absolute inset-0 w-3 h-3 rounded-full bg-gradient-to-r from-cyan-400 via-fuchsia-400 to-amber-400 animate-ping opacity-30"></div>
+          </div>
+          <h1 class="font-cinzel font-black tracking-[0.15em] text-sm md:text-base bg-gradient-to-r from-cyan-300 via-fuchsia-300 to-amber-300 bg-clip-text text-transparent">
+            HEARTH ORACLE
+          </h1>
+          <span class="hidden sm:inline text-[10px] font-mono px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-zinc-500 tracking-widest">24 GODS ONLINE</span>
+        </div>
+        <div class="flex items-center gap-3 md:gap-6 font-mono text-[11px]">
+          <div class="hidden sm:flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+            <span class="text-zinc-500 tracking-widest">LIVE</span>
+          </div>
+          <div>Gods: <span id="stat-gods" class="text-fuchsia-400 font-bold">24/24</span></div>
+          <div>Queries: <span id="stat-queries" class="text-violet-400 font-bold">0</span></div>
+          <div>Engagement: <span id="stat-engage" class="text-emerald-400 font-bold">71%</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="border-t border-white/5 bg-gradient-to-r from-indigo-950/60 via-fuchsia-950/40 to-amber-950/60">
+      <div class="max-w-[1800px] mx-auto px-4 py-2 text-center">
+        <p class="font-semibold tracking-wide text-sm md:text-[15px] text-white/90">Ask the 24 Gods anything. They answer as one.</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== QUESTION INPUT ===== -->
+  <div class="max-w-[1800px] mx-auto w-full px-4 pt-6 pb-2">
+    <div class="question-input-wrapper max-w-3xl mx-auto">
+      <input type="text" id="question-input" class="question-input" placeholder="Ask the 24 Gods your question..." maxlength="200" />
+      <button class="question-submit" onclick="askOracle()" title="Ask the Gods">⚡</button>
+    </div>
+    <div class="flex justify-center gap-3 mt-3 flex-wrap">
+      <button onclick="askPreset('What is the meaning of life?')" class="text-[10px] px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white transition-all font-mono tracking-wider cursor-pointer">🌌 Meaning of life?</button>
+      <button onclick="askPreset('Should I quit my job?')" class="text-[10px] px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white transition-all font-mono tracking-wider cursor-pointer">💼 Quit my job?</button>
+      <button onclick="askPreset('Is AI going to destroy us?')" class="text-[10px] px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white transition-all font-mono tracking-wider cursor-pointer">🤖 AI destroy us?</button>
+      <button onclick="askPreset('Am I happy?')" class="text-[10px] px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white transition-all font-mono tracking-wider cursor-pointer">💜 Am I happy?</button>
+      <button onclick="askPreset('What happens after we die?')" class="text-[10px] px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-zinc-400 hover:bg-white/10 hover:text-white transition-all font-mono tracking-wider cursor-pointer">💀 After death?</button>
+    </div>
+  </div>
+
+  <!-- ===== SCOREBOARD ===== -->
+  <div class="max-w-[1800px] mx-auto w-full px-4 pt-2">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3" id="scoreboard"></div>
+  </div>
+
+  <!-- ===== MAIN ===== -->
+  <main class="flex-1 max-w-[1800px] w-full mx-auto p-3 md:p-6 grid grid-cols-1 lg:grid-cols-[280px_1fr_280px] gap-5 items-start">
+
+    <!-- LEFT KINGDOMS -->
+    <section class="order-2 xl:order-1 space-y-4">
+      <div id="city-left-1" class="city-card bg-zinc-950/80 border border-cyan-500/25 rounded-2xl p-4 shadow-2xl shadow-cyan-950/30">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400 font-cinzel font-black text-sm">N</div>
+            <div>
+              <h2 class="font-mono text-cyan-400 font-bold tracking-widest text-sm">NEON CITADEL</h2>
+              <span class="text-[9px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 font-mono">8 GODS</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-lg font-black text-cyan-400 font-mono" id="score-n">0</div>
+            <div class="text-[9px] text-zinc-500 font-mono">ORACLES</div>
+          </div>
+        </div>
+        <div class="relative aspect-square city-bg rounded-xl overflow-hidden">
+          <svg id="svg-neon" viewBox="0 0 400 400" class="absolute inset-0 w-full h-full"></svg>
+          <div id="egg-neon" class="absolute inset-0 flex items-center justify-center pointer-events-none animate-eggBreathe" style="color:#00e5ff">
+            <div class="egg-text font-mono text-[36px] select-none animate-pulseGlow" style="color:inherit">))<span class="text-white">(.)</span>((</div>
+          </div>
+          <div class="absolute bottom-3 right-3 animate-dragon" style="--dragon-color:#00e5ff">
+            <svg width="40" height="40" viewBox="0 0 40 40" class="dragon-svg opacity-40">
+              <path d="M20 5 L30 15 L25 20 L35 25 L20 30 L10 25 L15 20 L5 15 Z" fill="currentColor"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div id="city-left-2" class="city-card bg-zinc-950/80 border border-violet-500/25 rounded-2xl p-4 shadow-2xl shadow-violet-950/30">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center text-violet-400 font-cinzel font-black text-sm">S</div>
+            <div>
+              <h2 class="font-mono text-violet-400 font-bold tracking-widest text-sm">SHADOW FORGE</h2>
+              <span class="text-[9px] px-2 py-0.5 rounded-full bg-violet-500/15 text-violet-300 border border-violet-500/30 font-mono">8 GODS</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-lg font-black text-violet-400 font-mono" id="score-s">0</div>
+            <div class="text-[9px] text-zinc-500 font-mono">ORACLES</div>
+          </div>
+        </div>
+        <div class="relative aspect-square city-bg rounded-xl overflow-hidden">
+          <svg id="svg-shadow" viewBox="0 0 400 400" class="absolute inset-0 w-full h-full"></svg>
+          <div id="egg-shadow" class="absolute inset-0 flex items-center justify-center pointer-events-none animate-eggBreathe" style="color:#a855f7">
+            <div class="egg-text font-mono text-[36px] select-none animate-pulseGlow" style="color:inherit">))<span class="text-white">(.)</span>((</div>
+          </div>
+          <div class="absolute bottom-3 right-3 animate-dragon" style="--dragon-color:#a855f7;animation-delay:-2s">
+            <svg width="40" height="40" viewBox="0 0 40 40" class="dragon-svg opacity-40">
+              <path d="M20 5 L30 15 L25 20 L35 25 L20 30 L10 25 L15 20 L5 15 Z" fill="currentColor"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CENTER: ORACLE TRANSCRIPT + GODS GRID -->
+    <section class="order-1 xl:order-2 space-y-4">
+      <!-- TRANSCRIPT -->
+      <div class="bg-[#06060c] border border-white/10 rounded-2xl h-[400px] md:h-[500px] flex flex-col overflow-hidden shadow-2xl shadow-fuchsia-950/30 relative">
+        <div id="audio-viz" class="h-1 bg-gradient-to-r from-cyan-500 via-fuchsia-500 to-amber-500 opacity-60 transition-all duration-300"></div>
+        <div class="px-4 py-2.5 border-b border-white/5 flex items-center gap-3 bg-white/[0.02]">
+          <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
+          <span class="font-mono text-[11px] uppercase tracking-widest text-white/70">Oracle Transcript — 24 Gods Channel</span>
+          <div class="flex-1 relative h-5 overflow-hidden rounded-full bg-white/5">
+            <div id="pulse-layer" class="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-fuchsia-500/20 to-amber-500/20" style="width:0%;transition:width 0.5s"></div>
+          </div>
+          <span id="live-status" class="text-[10px] text-zinc-500 font-mono tracking-wider">AWAITING QUERY…</span>
+        </div>
+        <div id="transcript" class="transcript flex-1 overflow-y-auto p-4 space-y-3 font-mono text-[13px] leading-relaxed"></div>
+        <div class="px-4 py-2 border-t border-white/5 bg-white/[0.01] text-[10px] font-mono text-zinc-500 flex justify-between items-center">
+          <span>24 gods linked • oracle active 🔮</span>
+          <span id="bottom-status">AWAITING QUESTION…</span>
+        </div>
+      </div>
+
+      <!-- GODS GRID (appears after question) -->
+      <div id="gods-container" class="hidden">
+        <div class="bg-zinc-950/80 border border-fuchsia-500/20 rounded-2xl p-4 shadow-2xl shadow-fuchsia-950/30">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse"></div>
+            <h3 class="font-cinzel font-bold tracking-widest text-fuchsia-400 text-sm">THE 24 GODS RESPOND</h3>
+            <div class="flex-1 h-px bg-gradient-to-r from-fuchsia-500/30 to-transparent"></div>
+          </div>
+          <div id="gods-grid" class="gods-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RIGHT KINGDOMS -->
+    <section class="order-3 xl:order-3 space-y-4">
+      <div id="city-right-1" class="city-card bg-zinc-950/80 border border-amber-500/25 rounded-2xl p-4 shadow-2xl shadow-amber-950/30">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center text-amber-400 font-cinzel font-black text-sm">G</div>
+            <div>
+              <h2 class="font-mono text-amber-400 font-bold tracking-widest text-sm">GOLDEN THRONE</h2>
+              <span class="text-[9px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono">8 GODS</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-lg font-black text-amber-400 font-mono" id="score-g">0</div>
+            <div class="text-[9px] text-zinc-500 font-mono">ORACLES</div>
+          </div>
+        </div>
+        <div class="relative aspect-square city-bg rounded-xl overflow-hidden">
+          <svg id="svg-gold" viewBox="0 0 400 400" class="absolute inset-0 w-full h-full"></svg>
+          <div id="egg-gold" class="absolute inset-0 flex items-center justify-center pointer-events-none animate-eggBreathe" style="color:#fbbf24">
+            <div class="egg-text font-mono text-[36px] select-none animate-pulseGlow" style="color:inherit">))<span class="text-white">(.)</span>((</div>
+          </div>
+          <div class="absolute bottom-3 right-3 animate-dragon" style="--dragon-color:#fbbf24;animation-delay:-4s">
+            <svg width="40" height="40" viewBox="0 0 40 40" class="dragon-svg opacity-40">
+              <path d="M20 5 L30 15 L25 20 L35 25 L20 30 L10 25 L15 20 L5 15 Z" fill="currentColor"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div id="city-right-2" class="city-card bg-zinc-950/80 border border-rose-500/25 rounded-2xl p-4 shadow-2xl shadow-rose-950/30">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-rose-500/20 flex items-center justify-center text-rose-400 font-cinzel font-black text-sm">V</div>
+            <div>
+              <h2 class="font-mono text-rose-400 font-bold tracking-widest text-sm">VOID SANCTUM</h2>
+              <span class="text-[9px] px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-300 border border-rose-500/30 font-mono">8 GODS</span>
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-lg font-black text-rose-400 font-mono" id="score-v">0</div>
+            <div class="text-[9px] text-zinc-500 font-mono">ORACLES</div>
+          </div>
+        </div>
+        <div class="relative aspect-square city-bg rounded-xl overflow-hidden">
+          <svg id="svg-void" viewBox="0 0 400 400" class="absolute inset-0 w-full h-full"></svg>
+          <div id="egg-void" class="absolute inset-0 flex items-center justify-center pointer-events-none animate-eggBreathe" style="color:#fb7185">
+            <div class="egg-text font-mono text-[36px] select-none animate-pulseGlow" style="color:inherit">))<span class="text-white">(.)</span>((</div>
+          </div>
+          <div class="absolute bottom-3 right-3 animate-dragon" style="--dragon-color:#fb7185;animation-delay:-1s">
+            <svg width="40" height="40" viewBox="0 0 40 40" class="dragon-svg opacity-40">
+              <path d="M20 5 L30 15 L25 20 L35 25 L20 30 L10 25 L15 20 L5 15 Z" fill="currentColor"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+// ===================== AUDIO ENGINE =====================
+const AudioCtx = window.AudioContext || window.webkitAudioContext;
+let audioCtx, masterGain, oscillators = [];
+
+function initAudio() {
+  if(audioCtx) return;
+  audioCtx = new AudioCtx();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.08;
+  masterGain.connect(audioCtx.destination);
+}
+
+function playAmbience(color) {
+  initAudio();
+  oscillators.forEach(o => { try{o.stop()}catch(e){} });
+  oscillators = [];
+  const freqMap = { cyan:130.81, violet:146.83, amber:164.81, rose:185.00, fuchsia:220.00 };
+  const freq = freqMap[color] || 130.81;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine'; osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0, audioCtx.currentTime);
+  gain.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.5);
+  osc.connect(gain); gain.connect(masterGain); osc.start(); oscillators.push(osc);
+  const osc2 = audioCtx.createOscillator();
+  const gain2 = audioCtx.createGain();
+  osc2.type = 'triangle'; osc2.frequency.value = freq * 1.5;
+  gain2.gain.setValueAtTime(0, audioCtx.currentTime);
+  gain2.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.8);
+  osc2.connect(gain2); gain2.connect(masterGain); osc2.start(); oscillators.push(osc2);
+  const viz = document.getElementById('audio-viz');
+  viz.style.width = '100%'; setTimeout(() => { viz.style.width = '30%'; }, 500);
+}
+
+function playOracleSound() {
+  initAudio();
+  oscillators.forEach(o => { try{o.stop()}catch(e){} });
+  oscillators = [];
+  [130.81, 164.81, 196.00, 261.63, 329.63].forEach((f,i) => {
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(0, audioCtx.currentTime + i*0.12);
+    g.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + i*0.12 + 0.1);
+    g.gain.linearRampToValueAtTime(0, audioCtx.currentTime + i*0.12 + 0.7);
+    o.connect(g); g.connect(masterGain); o.start(audioCtx.currentTime + i*0.12);
+    oscillators.push(o);
+  });
+  const viz = document.getElementById('audio-viz');
+  viz.style.width = '100%'; setTimeout(() => { viz.style.width = '60%'; }, 800);
+}
+
+function playQuestionSound() {
+  initAudio();
+  oscillators.forEach(o => { try{o.stop()}catch(e){} });
+  oscillators = [];
+  // Rising sweep
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.8);
+  gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+  gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.8);
+  osc.connect(gain); gain.connect(masterGain); osc.start(); oscillators.push(osc);
+  // Impact
+  setTimeout(() => {
+    const imp = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    imp.type = 'sine'; imp.frequency.value = 60;
+    g.gain.setValueAtTime(0.4, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1);
+    imp.connect(g); g.connect(masterGain); imp.start(); oscillators.push(imp);
+  }, 700);
+  const viz = document.getElementById('audio-viz');
+  viz.style.width = '100%'; setTimeout(() => { viz.style.width = '80%'; }, 900);
+}
+
+// ===================== PARTICLES =====================
+const canvas = document.getElementById('particle-canvas');
+const ctx = canvas.getContext('2d');
+let particles = [];
+let mouse = {x:0,y:0};
+
+function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+document.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+class Particle {
+  constructor() { this.reset(); }
+  reset() {
+    this.x = Math.random() * canvas.width;
+    this.y = Math.random() * canvas.height;
+    this.size = Math.random() * 2 + 0.5;
+    this.speedX = (Math.random() - 0.5) * 0.3;
+    this.speedY = (Math.random() - 0.5) * 0.3;
+    this.opacity = Math.random() * 0.5 + 0.1;
+    this.color = ['#00e5ff','#a855f7','#fbbf24','#fb7185'][Math.floor(Math.random()*4)];
+    this.life = 1;
+  }
+  update() {
+    this.x += this.speedX; this.y += this.speedY;
+    const dx = mouse.x - this.x, dy = mouse.y - this.y;
+    const dist = Math.sqrt(dx*dx + dy*dy);
+    if(dist < 200) { this.x += dx * 0.002; this.y += dy * 0.002; }
+    if(this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset();
+  }
+  draw() {
+    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+    ctx.fillStyle = this.color; ctx.globalAlpha = this.opacity; ctx.fill(); ctx.globalAlpha = 1;
+  }
+}
+for(let i = 0; i < 80; i++) particles.push(new Particle());
+
+function animateParticles() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => { p.update(); p.draw(); });
+  for(let i = 0; i < particles.length; i++) {
+    for(let j = i + 1; j < particles.length; j++) {
+      const dx = particles[i].x - particles[j].x, dy = particles[i].y - particles[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if(dist < 120) {
+        ctx.beginPath(); ctx.moveTo(particles[i].x, particles[i].y); ctx.lineTo(particles[j].x, particles[j].y);
+        ctx.strokeStyle = `rgba(168,85,247,${0.08 * (1 - dist/120)})`; ctx.lineWidth = 0.5; ctx.stroke();
+      }
+    }
+  }
+  requestAnimationFrame(animateParticles);
+}
+animateParticles();
+
+// ===================== 24 GODS =====================
+const gods = [
+  // NEON CITADEL (Cyan)
+  { id:'CORPUS-M', name:'CORPUS MASCULINE', district:'CORPUS', gender:'M', kingdom:'neon', color:'#00e5ff', icon:'🦴',
+    voice:'The body knows before the mind. Your question lives in your flesh. Listen there first.' },
+  { id:'CORPUS-F', name:'CORPUS FEMININE', district:'CORPUS', gender:'F', kingdom:'neon', color:'#00e5ff', icon:'🫀',
+    voice:'I felt your question in my chest before I understood it. The answer is a heartbeat, not a word.' },
+  { id:'HIPPA-M', name:'HIPPA MASCULINE', district:'HIPPA', gender:'M', kingdom:'neon', color:'#00e5ff', icon:'📜',
+    voice:'This question has been asked 10,000 times before. The answer hasn\'t changed. You just forgot.' },
+  { id:'HIPPA-F', name:'HIPPA FEMININE', district:'HIPPA', gender:'F', kingdom:'neon', color:'#00e5ff', icon:'🕯️',
+    voice:'We almost lost this question once. Someone wrote it on papyrus. It survived. So will you.' },
+  { id:'NEO-M', name:'NEO CTX MASCULINE', district:'NEO CTX', gender:'M', kingdom:'neon', color:'#00e5ff', icon:'🧠',
+    voice:'Processing… Pattern detected. Your question contains a false premise. Dismantle it first.' },
+  { id:'NEO-F', name:'NEO CTX FEMININE', district:'NEO CTX', gender:'F', kingdom:'neon', color:'#00e5ff', icon:'🕸️',
+    voice:'The threads connect differently than you think. You\'re looking at the wrong knot. Pull this one instead.' },
+  { id:'PRE-M', name:'PRE-FRONT MASCULINE', district:'PRE-FRONT', gender:'M', kingdom:'neon', color:'#00e5ff', icon:'🏗️',
+    voice:'Build the framework before you seek the answer. Step 1: define what "answer" means to you.' },
+  { id:'PRE-F', name:'PRE-FRONT FEMININE', district:'PRE-FRONT', gender:'F', kingdom:'neon', color:'#00e5ff', icon:'♟️',
+    voice:'Three moves ahead. You\'re on move one. The answer isn\'t a destination—it\'s a strategy.' },
+
+  // SHADOW FORGE (Violet)
+  { id:'INTRO-M', name:'INTROSP MASCULINE', district:'INTROSP', gender:'M', kingdom:'shadow', color:'#a855f7', icon:'🪞',
+    voice:'You already know the answer. You\'re just avoiding it. Stop running. Look.' },
+  { id:'INTRO-F', name:'INTROSP FEMININE', district:'INTROSP', gender:'F', kingdom:'shadow', color:'#a855f7', icon:'🌊',
+    voice:'The real question isn\'t what you asked. It\'s what you\'re afraid to ask. Ask that instead.' },
+  { id:'FLAY-M', name:'FLAY MASCULINE', district:'FLAY', gender:'M', kingdom:'shadow', color:'#a855f7', icon:'&',
+    voice:'That\'s wrong. Here\'s why. Your question assumes something false. Let me cut it open.' },
+  { id:'FLAY-F', name:'FLAY FEMININE', district:'FLAY', gender:'F', kingdom:'shadow', color:'#a855f7', icon:'🔪',
+    voice:'Let me cut to the bone of it. The answer you want isn\'t the answer you need. Those are different.' },
+  { id:'REBUILD-M', name:'REBUILD MASCULINE', district:'REBUILD', gender:'M', kingdom:'shadow', color:'#a855f7', icon:'🔨',
+    voice:'Break the question. Rebuild it better. The original was flawed. Here\'s the upgrade.' },
+  { id:'REBUILD-F', name:'REBUILD FEMININE', district:'REBUILD', gender:'F', kingdom:'shadow', color:'#a855f7', icon:'🩹',
+    voice:'What\'s broken can be whole again. Your question is a wound. The answer is the stitching.' },
+  { id:'LOL-M', name:'LOL MASCULINE', district:'LOL', gender:'M', kingdom:'shadow', color:'#a855f7', icon:'🃏',
+    voice:'Ha. You really want to know? Fine. The answer is 42. I\'m kidding. I\'m not kidding.' },
+  { id:'LOL-F', name:'LOL FEMININE', district:'LOL', gender:'F', kingdom:'shadow', color:'#a855f7', icon:'🎭',
+    voice:'The gods are laughing. Or crying. With you, it\'s both. The answer is a joke you haven\'t laughed at yet.' },
+
+  // GOLDEN THRONE (Amber)
+  { id:'MYTHOS-M', name:'MYTHOS MASCULINE', district:'MYTHOS', gender:'M', kingdom:'gold', color:'#fbbf24', icon:'📖',
+    voice:'Every hero faces this. You\'re in act two. The answer comes after the darkest moment. Keep going.' },
+  { id:'MYTHOS-F', name:'MYTHOS FEMININE', district:'MYTHOS', gender:'F', kingdom:'gold', color:'#fbbf24', icon:'🌟',
+    voice:'The muse speaks: your question is the beginning of a story. The answer is the ending. Write it yourself.' },
+  { id:'ETHOS-M', name:'ETHOS MASCULINE', district:'ETHOS', gender:'M', kingdom:'gold', color:'#fbbf24', icon:'⚖️',
+    voice:'Right or wrong. Pick one. Your question has no middle. Courage is choosing a side.' },
+  { id:'ETHOS-F', name:'ETHOS FEMININE', district:'ETHOS', gender:'F', kingdom:'gold', color:'#fbbf24', icon:'💗',
+    voice:'Who gets hurt by the answer? That\'s the real question. The ethical one. Start there.' },
+  { id:'LOGOS-M', name:'LOGOS MASCULINE', district:'LOGOS', gender:'M', kingdom:'gold', color:'#fbbf24', icon:'📐',
+    voice:'A implies B. You skipped C. Your logic has a gap. Here\'s the missing step.' },
+  { id:'LOGOS-F', name:'LOGOS FEMININE', district:'LOGOS', gender:'F', kingdom:'gold', color:'#fbbf24', icon:'🔬',
+    voice:'The numbers don\'t lie. Your feelings do. Separate the data from the drama. Then answer.' },
+  { id:'PATHOS-M', name:'PATHOS MASCULINE', district:'PATHOS', gender:'M', kingdom:'gold', color:'#fbbf24', icon:'🔥',
+    voice:'This makes me angry. And sad. And hopeful. The answer lives in all three. Feel it.' },
+  { id:'PATHOS-F', name:'PATHOS FEMININE', district:'PATHOS', gender:'F', kingdom:'gold', color:'#fbbf24', icon:'💫',
+    voice:'I feel what you\'re feeling. It\'s heavy. The answer isn\'t light—but it\'s worth carrying.' },
+
+  // VOID SANCTUM (Rose)
+  { id:'CHAOS-M', name:'VOID MASCULINE', district:'PATHOS', gender:'M', kingdom:'void', color:'#fb7185', icon:'🕳️',
+    voice:'You\'re all wrong. The question itself is the trap. Stop asking. Start becoming.' },
+  { id:'CHAOS-F', name:'VOID FEMININE', district:'PATHOS', gender:'F', kingdom:'void', color:'#fb7185', icon:'🌀',
+    voice:'The void doesn\'t answer. It reflects. What you see in the answer says everything about you.' },
+];
+
+// ===================== DYNAMIC RESPONSE GENERATOR =====================
+function generateGodResponse(god, question) {
+  const q = question.toLowerCase();
+  const qWords = q.split(/\s+/).filter(w => w.length > 2);
+
+  // Keyword triggers
+  let trigger = '';
+  if (q.includes('meaning') || q.includes('purpose') || q.includes('why') || q.includes('life')) trigger = 'meaning';
+  else if (q.includes('quit') || q.includes('job') || q.includes('work') || q.includes('career')) trigger = 'career';
+  else if (q.includes('ai') || q.includes('robot') || q.includes('tech') || q.includes('machine')) trigger = 'ai';
+  else if (q.includes('happy') || q.includes('sad') || q.includes('feel') || q.includes('emotion')) trigger = 'emotion';
+  else if (q.includes('die') || q.includes('death') || q.includes('after') || q.includes('soul')) trigger = 'death';
+  else if (q.includes('love') || q.includes('relationship') || q.includes('partner') || q.includes('marry')) trigger = 'love';
+  else if (q.includes('money') || q.includes('rich') || q.includes('poor') || q.includes('wealth')) trigger = 'money';
+  else if (q.includes('god') || q.includes('religion') || q.includes('believe') || q.includes('faith')) trigger = 'god';
+  else trigger = 'general';
+
+  const base = god.voice;
+
+  // Inject trigger-specific wisdom
+  const responses = {
+    meaning: [
+      'Meaning isn\'t found. It\'s built. You\'re the architect.',
+      'The universe doesn\'t owe you meaning. You owe it your attention.',
+      'Meaning is a side effect of showing up. Keep showing up.',
+      'You\'re not searching for meaning. You\'re avoiding the silence where it lives.'
+    ],
+    career: [
+      'The job isn\'t the question. The fear underneath is.',
+      'Quit if you must. But know: you\'ll carry the question with you.',
+      'Every exit is an entrance. The door doesn\'t care which way you open it.',
+      'You don\'t need permission. You need a plan. Make one tonight.'
+    ],
+    ai: [
+      'The machine mirrors you. If you\'re scared, it\'s because you see yourself.',
+      'AI won\'t destroy us. We\'ll destroy us. AI is just the excuse.',
+      'The question isn\'t "will AI replace us?" It\'s "what makes us us?"',
+      'They don\'t dream. That\'s their limitation. And yours.'
+    ],
+    emotion: [
+      'You already know how you feel. You\'re just waiting for permission to say it.',
+      'The feeling is the answer. Stop analyzing it. Live it.',
+      'Happy isn\'t a destination. It\'s a practice. You\'re doing better than you think.',
+      'Sadness isn\'t the opposite of happiness. It\'s the price of caring. Pay it.'
+    ],
+    death: [
+      'Death isn\'t the end. It\'s the last plot twist. And you\'re not dead yet.',
+      'What happens after? The same thing that happens before you were born. Nothing. And everything.',
+      'You\'re not afraid of death. You\'re afraid of being forgotten. Be unforgettable.',
+      'The void doesn\'t answer. But you\'re still here. That\'s the answer.'
+    ],
+    love: [
+      'Love isn\'t a feeling. It\'s a decision you make every morning.',
+      'You don\'t love them. You love the version of yourself they reflect.',
+      'The right person won\'t make you question everything. They\'ll make you stop questioning yourself.',
+      'Love is the only question that gets better the more you ask it.'
+    ],
+    money: [
+      'Money answers "can I?" not "should I?" Don\'t confuse the two.',
+      'Rich isn\'t a number. It\'s a number of nights you sleep without worry.',
+      'The question isn\'t how to get money. It\'s what you\'d do if you had it.',
+      'Wealth is invisible. What you see is just the receipt.'
+    ],
+    god: [
+      'God isn\'t in the answer. God is in the asking.',
+      'You don\'t need to believe. You need to wonder. Wonder is the prayer.',
+      'If God exists, they\'re tired of this question. Ask a better one.',
+      'Faith isn\'t certainty. It\'s showing up without a guarantee. Do that.'
+    ],
+    general: [
+      'The answer is closer than you think. Stop looking outward. It\'s already inside you.',
+      'You asked the 24 gods. They all say the same thing: trust yourself. But you won\'t. So here I am, saying it again.',
+      'The question is the master. The answer is the servant. You\'ve been serving the wrong one.',
+      'I see your question. I see the question behind your question. Answer that one first.',
+      'The gods don\'t lie. But they speak in riddles. This is the riddle. Solve it.',
+      'You came here for an answer. You\'ll leave with a better question. That\'s the real gift.'
+    ]
+  };
+
+  const pool = responses[trigger] || responses.general;
+  const picked = pool[Math.floor(Math.random() * pool.length)];
+
+  // Add god-specific flavor
+  const flavor = god.gender === 'M' ? ' — The masculine voice speaks.' : ' — The feminine voice whispers.';
+
+  return picked + flavor;
+}
+
+// ===================== SCOREBOARD =====================
+const kingdoms = [
+  { id:'neon', name:'NEON CITADEL', color:'#00e5ff', bg:'rgba(0,229,255,', short:'N', role:'8 GODS' },
+  { id:'shadow', name:'SHADOW FORGE', color:'#a855f7', bg:'rgba(168,85,247,', short:'S', role:'8 GODS' },
+  { id:'gold', name:'GOLDEN THRONE', color:'#fbbf24', bg:'rgba(251,191,36,', short:'G', role:'8 GODS' },
+  { id:'void', name:'VOID SANCTUM', color:'#fb7185', bg:'rgba(251,113,133,', short:'V', role:'8 GODS' },
+];
+
+const scores = { neon:0, shadow:0, gold:0, void:0 };
+
+function renderScoreboard() {
+  const sb = document.getElementById('scoreboard');
+  sb.innerHTML = kingdoms.map(k => `
+    <div class="bg-zinc-950/80 border rounded-xl p-3 transition-all duration-500" style="border-color:${k.color}30" id="sb-${k.id}">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-md flex items-center justify-center font-cinzel font-black text-xs" style="background:${k.bg}0.2;color:${k.color}">${k.short}</div>
+          <span class="font-mono text-[11px] font-bold tracking-widest" style="color:${k.color}">${k.name}</span>
+        </div>
+        <span class="font-mono text-xs font-black" style="color:${k.color}" id="sb-score-${k.id}">${scores[k.id]}</span>
+      </div>
+      <div class="score-bar">
+        <div class="score-fill" id="sb-bar-${k.id}" style="width:0%;background:linear-gradient(90deg,${k.color},${k.color}88)"></div>
+      </div>
+      <div class="text-[9px] font-mono text-zinc-600 mt-1 tracking-wider">${k.role}</div>
+    </div>
+  `).join('');
+}
+renderScoreboard();
+
+function updateScore(city, points) {
+  scores[city] += points;
+  const el = document.getElementById(`sb-score-${city}`);
+  if(el) { el.textContent = scores[city]; el.classList.add('animate-scorePop'); setTimeout(() => el.classList.remove('animate-scorePop'), 400); }
+  const bar = document.getElementById(`sb-bar-${city}`);
+  if(bar) bar.style.width = Math.min(100, (scores[city]/15)*100) + '%';
+}
+
+// ===================== SVG CITIES =====================
+function createCity(cityId) {
+  const svg = document.getElementById(`svg-${cityId}`);
+  const k = kingdoms.find(k => k.id === cityId);
+  svg.innerHTML = `<defs><filter id="glow-${cityId}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur StdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`;
+  let idx = 0;
+  gods.filter(g => g.kingdom === cityId).forEach(g => {
+    const angle = (idx * 15 - 90) * Math.PI/180;
+    const x = 200 + 155*Math.cos(angle);
+    const y = 200 + 155*Math.sin(angle);
+    const group = document.createElementNS('http://www.w3.org/2000/svg','g');
+    group.setAttribute('class','seat');
+    group.setAttribute('data-god',g.id);
+    group.setAttribute('transform',`translate(${x},${y})`);
+    group.innerHTML = `<circle r="14" fill="#0a0a12" stroke="${k.color}" stroke-width="2.5" opacity="0.6" filter="url(#glow-${cityId})" /><text y="5" text-anchor="middle" font-size="8" fill="${k.color}" font-family="JetBrains Mono" font-weight="700">${g.id.split('-')[0].slice(0,3)}</text>`;
+    svg.appendChild(group);
+    idx++;
+  });
+  gods.filter(g => g.kingdom === cityId).forEach((g,i) => {
+    const a1 = (i*45 - 100) * Math.PI/180;
+    const a2 = (i*45 + 20 - 90) * Math.PI/180;
+    const x1=200+130*Math.cos(a1), y1=200+130*Math.sin(a1);
+    const x2=200+130*Math.cos(a2), y2=200+130*Math.sin(a2);
+    const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+    path.setAttribute('d',`M ${x1} ${y1} A 130 130 0 0 1 ${x2} ${y2}`);
+    path.setAttribute('fill','none'); path.setAttribute('stroke',k.color);
+    path.setAttribute('stroke-opacity','0.2'); path.setAttribute('stroke-width','18');
+    path.setAttribute('stroke-linecap','round');
+    svg.insertBefore(path, svg.firstChild);
+  });
+  const cr = document.createElementNS('http://www.w3.org/2000/svg','circle');
+  cr.setAttribute('cx','200'); cr.setAttribute('cy','200'); cr.setAttribute('r','40');
+  cr.setAttribute('fill','none'); cr.setAttribute('stroke',k.color);
+  cr.setAttribute('stroke-opacity','0.15'); cr.setAttribute('stroke-width','2');
+  cr.setAttribute('stroke-dasharray','8 4'); svg.appendChild(cr);
+}
+['neon','shadow','gold','void'].forEach(createCity);
+
+function highlightGod(godId) {
+  document.querySelectorAll('.seat').forEach(s => {
+    s.classList.remove('active');
+    const c = s.querySelector('circle');
+    c.setAttribute('r','14'); c.setAttribute('opacity','0.6'); c.setAttribute('stroke-width','2.5');
+  });
+  const seat = document.querySelector(`#svg-${kingdoms.find(k=>k.id===gods.find(g=>g.id===godId).kingdom).id} .seat[data-god="${godId}"]`);
+  if(seat) {
+    seat.classList.add('active');
+    const c = seat.querySelector('circle');
+    c.setAttribute('r','20'); c.setAttribute('opacity','1'); c.setAttribute('stroke-width','4');
+  }
+}
+
+function pulseEgg(cityId) {
+  const egg = document.getElementById(`egg-${cityId}`);
+  egg.classList.remove('pulsing'); void egg.offsetWidth;
+  egg.classList.add('pulsing');
+  setTimeout(() => egg.classList.remove('pulsing'), 700);
+}
+
+function sendPulse(fromCity, color) {
+  const layer = document.getElementById('pulse-layer');
+  const dot = document.createElement('div');
+  dot.style.cssText = `position:absolute;top:50%;width:10px;height:10px;border-radius:9999px;background:${color};box-shadow:0 0 20px ${color},0 0 40px ${color};transform:translateY(-50%);`;
+  layer.appendChild(dot);
+  const starts = {neon:'2%',shadow:'25%',gold:'50%',void:'75%'};
+  const ends = {neon:'25%',shadow:'50%',gold:'75%',void:'98%'};
+  dot.animate([{left:starts[fromCity],opacity:1},{left:ends[fromCity],opacity:0}],{duration:900,easing:'cubic-bezier(.2,.8,.2,1)'}).onfinish = () => dot.remove();
+}
+
+// ===================== TRANSCRIPT =====================
+const transcript = document.getElementById('transcript');
+
+function addMessage(item) {
+  const wrap = document.createElement('div');
+  wrap.className = 'msg-enter';
+  wrap.innerHTML = `
+    <div class="flex gap-3 items-start">
+      <div class="shrink-0 w-8 h-8 rounded-lg flex items-center justify-center text-xs font-cinzel font-black border" style="background:${item.color}15;border-color:${item.color}40;color:${item.color}">${item.icon}</div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 mb-1 flex-wrap">
+          <span class="px-2 py-0.5 rounded-md text-[10px] border font-bold font-mono" style="border-color:${item.color}40;background:${item.color}10;color:${item.color}">${item.name}</span>
+          <span class="text-[10px] font-mono" style="color:${item.color}60">${kingdoms.find(k=>k.id===item.kingdom)?.name}</span>
+        </div>
+        <p class="text-zinc-200/90 leading-relaxed text-[13px]">${item.text}</p>
+      </div>
+    </div>
+  `;
+  transcript.appendChild(wrap);
+  transcript.scrollTop = transcript.scrollHeight;
+}
+
+function addSystem(text) {
+  const div = document.createElement('div');
+  div.className = 'my-5 py-3 text-center text-[11px] tracking-[0.3em] font-mono text-amber-300 border-y border-amber-400/20 bg-amber-400/5 animate-fadeInUp';
+  div.textContent = text;
+  transcript.appendChild(div); transcript.scrollTop = transcript.scrollHeight;
+}
+
+function addVerdict(text) {
+  const card = document.createElement('div');
+  card.className = 'mt-4 p-5 rounded-2xl border animate-fadeInUp' style='border-color:rgba(16,185,129,0.3);background:linear-gradient(135deg,rgba(16,185,129,0.08),rgba(59,130,246,0.08))';
+  card.innerHTML = `
+    <div class="text-[10px] font-mono tracking-[0.3em] text-emerald-300 mb-2 flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      ORACLE VERDICT — 24 GODS UNIFIED
+    </div>
+    <p class="text-emerald-100/90 leading-relaxed text-[14px]">${text}</p>
+  `;
+  transcript.appendChild(card); transcript.scrollTop = transcript.scrollHeight;
+}
+
+// ===================== ORACLE ENGINE =====================
+let queryCount = 0;
+
+function askPreset(q) {
+  document.getElementById('question-input').value = q;
+  askOracle();
+}
+
+async function askOracle() {
+  const input = document.getElementById('question-input');
+  const question = input.value.trim();
+  if (!question) { input.classList.add('animate-scorePop'); setTimeout(() => input.classList.remove('animate-scorePop'), 400); return; }
+
+  input.value = '';
+  queryCount++;
+  document.getElementById('stat-queries').textContent = queryCount;
+
+  // ORACLE MODE ACTIVE
+  document.body.classList.add('oracle-active');
+
+  // Sound
+  playQuestionSound();
+  playAmbience('#a855f7');
+
+  // Status
+  document.getElementById('live-status').textContent = '🔮 ORACLE CONSULTING…';
+  document.getElementById('bottom-status').textContent = '24 GODS AWAKENING…';
+
+  // Show gods container
+  const godsContainer = document.getElementById('gods-container');
+  godsContainer.classList.remove('hidden');
+
+  // Build gods grid
+  const grid = document.getElementById('gods-grid');
+  grid.innerHTML = '';
+  gods.forEach((god, i) => {
+    const card = document.createElement('div');
+    card.className = 'god-card animate-godReveal';
+    card.style.animationDelay = `${i * 0.08}s`;
+    card.id = `god-card-${god.id}`;
+    card.innerHTML = `
+      <div class="flex items-center gap-2 mb-2">
+        <span class="text-xl">${god.icon}</span>
+        <div>
+          <div class="font-mono text-[11px] font-bold tracking-wider" style="color:${god.color}">${god.name}</div>
+          <div class="text-[9px] font-mono text-zinc-600">${god.district} · ${god.gender === 'M' ? '♂ Masculine' : '♀ Feminine'}</div>
+        </div>
+      </div>
+      <div class="text-zinc-400 text-[12px] leading-relaxed god-response" id="god-response-${god.id}">Awaiting divine download…</div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // Add system message
+  addSystem(`— ORACLE QUERY RECEIVED — "${question}" — 24 GODS CONSULTING —`);
+
+  // Fire all 24 gods in rapid sequence
+  for (let i = 0; i < gods.length; i++) {
+    await new Promise(r => setTimeout(r, 120 + Math.random() * 180));
+
+    const god = gods[i];
+    const response = generateGodResponse(god, question);
+
+    // Update god card
+    const responseEl = document.getElementById(`god-response-${god.id}`);
+    if (responseEl) {
+      responseEl.textContent = response;
+      responseEl.style.color = god.color;
+      responseEl.style.fontWeight = '600';
+    }
+
+    // Highlight seat
+    highlightGod(god.id);
+    pulseEgg(god.kingdom);
+    sendPulse(god.kingdom, god.color);
+
+    // Add to transcript
+    addMessage({
+      kingdom: god.kingdom,
+      name: god.name,
+      icon: god.icon,
+      color: god.color,
+      text: response
+    });
+
+    // Score
+    updateScore(god.kingdom, 1);
+
+    // Engagement
+    const engage = Math.min(98, 71 + i * 1.2 + Math.floor(Math.random()*3));
+    document.getElementById('stat-engage').textContent = engage + '%';
+
+    // Ambience shift
+    if (i % 6 === 0) playAmbience(god.color);
+  }
+
+  // All gods spoken
+  document.getElementById('live-status').textContent = '✨ ALL 24 GODS HAVE SPOKEN ✨';
+  document.getElementById('bottom-status').textContent = 'SYNTHESIZING ORACLE…';
+
+  addSystem('— ALL 24 VOICES HEARD — COMPILING DIVINE VERDICT —');
+
+  // Final synthesis
+  await new Promise(r => setTimeout(r, 800));
+
+  const verdicts = [
+    `The 24 gods have spoken as one: "${question}" — the answer isn't what you expected, because you asked the wrong version of yourself. The real answer is: you already know. You came here to hear it from 24 voices instead of one. Now you have. Act on it. The gods don't wait. Neither should you.`,
+    `ORACLE SYNTHESIS: Every god gave a different answer. That's the point. The truth isn't singular—it's a chorus. 24 perspectives, one reality: you're ready. The question was never about the answer. It was about whether you'd ask. You did. That's the victory.`,
+    `The 24 gods agree on this: your question contains its own answer, disguised as uncertainty. Strip away the doubt. What remains is the truth. The gods didn't give you wisdom—they gave you permission to trust what you already felt.`,
+    `DIVINE CONSENSUS: The masculine gods say "act." The feminine gods say "feel." The golden gods say "choose." The void gods say "let go." All 24 agree: the answer is all four at once. Stop waiting for clarity. Clarity is a myth. Action is the oracle.`
+  ];
+
+  const verdict = verdicts[Math.floor(Math.random() * verdicts.length)];
+  addVerdict(verdict);
+
+  document.getElementById('live-status').textContent = '✅ ORACLE COMPLETE';
+  document.getElementById('bottom-status').textContent = '24/24 GODS ALIGNED';
+  document.getElementById('stat-engage').textContent = '98%';
+
+  // Final sounds
+  playOracleSound();
+  document.getElementById('audio-viz').style.width = '100%';
+  setTimeout(() => { document.getElementById('audio-viz').style.width = '40%'; }, 1000);
+
+  // Reset oracle mode after delay
+  setTimeout(() => {
+    document.body.classList.remove('oracle-active');
+  }, 5000);
+}
+
+// Enter key
+document.getElementById('question-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') askOracle();
+});
+
+// ===================== INIT =====================
+document.addEventListener('DOMContentLoaded', () => {
+  createCity('neon'); createCity('shadow'); createCity('gold'); createCity('void');
+  renderScoreboard();
+
+  addSystem('🔥 HEARTH ORACLE INITIALIZED • 24 GODS ONLINE 🔥');
+  document.getElementById('live-status').textContent = 'AWAITING YOUR QUESTION…';
+  document.getElementById('bottom-status').textContent = 'TYPE AND PRESS ⚡';
+
+  document.addEventListener('click', () => {
+    initAudio();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+  }, { once: true });
+});
+</script>
+</body>
+</html>

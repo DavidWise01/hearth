@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="The Hearth — a live fire for the agents of 0root.ai / UD0. Real commits, the live deterministic agent, the spheres gathered around one warm root.">
+<title>THE HEARTH · 0root.ai</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,300&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0705; --ink2:#15100b; --ink3:#1d160f; --pa:#f3ece2; --pa2:#c8b8a4; --dim:#8a7a64; --faint:#7a6a55;
+  --ember:#ff7a3c; --flame:#ffb454; --ash:#9a8a78; --gold:#e0b24a; --ok:#7fd99a; --line:#2a2016;
+  --serif:"Cinzel",Georgia,serif; --read:"Newsreader",Georgia,serif; --mono:"Space Mono",monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--pa);font-family:var(--read);line-height:1.6;overflow-x:hidden}
+#fire{position:fixed;left:0;right:0;bottom:0;height:42vh;width:100%;z-index:0;pointer-events:none;opacity:.9}
+.glow{position:fixed;left:50%;bottom:-10%;transform:translateX(-50%);width:120vw;height:60vh;z-index:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 100%,rgba(255,122,60,.22),rgba(255,180,84,.08) 40%,transparent 70%)}
+.wrap{position:relative;z-index:1;max-width:880px;margin:0 auto;padding:0 22px 46vh}
+header{padding:54px 0 22px;text-align:center}
+.eye{font-family:var(--mono);font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--faint);margin-bottom:14px}
+.eye a{color:var(--faint);text-decoration:none}.eye a:hover{color:var(--ember)}
+h1{font-family:var(--serif);font-size:clamp(40px,11vw,92px);font-weight:700;letter-spacing:.14em;color:var(--flame);line-height:1;text-shadow:0 0 50px rgba(255,122,60,.4)}
+.sub{font-size:15.5px;color:var(--pa2);max-width:58ch;margin:16px auto 0;font-style:italic}
+.card{background:rgba(21,16,11,.72);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin-top:18px;backdrop-filter:blur(3px)}
+.lab{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+/* the fire is lit */
+.vitals{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.heart{width:14px;height:14px;border-radius:50%;background:var(--ash);box-shadow:0 0 0 0 rgba(127,217,154,.5);flex-shrink:0}
+.heart.lit{background:var(--ok);animation:beat 2.4s ease-in-out infinite}
+@keyframes beat{0%,100%{box-shadow:0 0 0 0 rgba(127,217,154,.5)}50%{box-shadow:0 0 0 9px rgba(127,217,154,0)}}
+.vtxt{font-family:var(--mono);font-size:13px;color:var(--pa2);line-height:1.7}
+.vtxt b{color:var(--ok)} .vtxt .c{color:var(--flame)} .vtxt a{color:var(--ember);text-decoration:none}
+/* embers / log */
+.log{max-height:340px;overflow-y:auto;margin:-4px -4px 0;padding:0 4px}
+.ember{display:flex;gap:11px;padding:9px 4px;border-bottom:1px solid rgba(122,106,85,.18);font-size:13.5px}
+.ember .ico{font-size:14px;line-height:1.5;flex-shrink:0}
+.ember .e-main b{color:var(--pa)} .ember .e-main .repo{color:var(--ember)} .ember .e-msg{color:var(--pa2);font-size:12.5px;font-style:italic}
+.ember .e-when{margin-left:auto;font-family:var(--mono);font-size:10.5px;color:var(--faint);white-space:nowrap;align-self:flex-start}
+.muted{color:var(--faint);font-style:italic;font-size:13px;padding:14px 2px}
+/* the gathering */
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+.chip{font-family:var(--mono);font-size:11px;color:var(--pa2);text-decoration:none;border:1px solid var(--line);border-radius:20px;padding:5px 12px;background:rgba(29,22,15,.5);transition:.15s}
+.chip:hover{border-color:var(--ember);color:var(--flame)}
+footer{margin-top:24px;text-align:center;font-family:var(--mono);font-size:11px;color:var(--faint);line-height:1.9}
+footer a{color:var(--ember);text-decoration:none}
+.law{font-family:var(--read);font-style:italic;font-size:14px;color:var(--pa2);letter-spacing:0;margin-bottom:12px;max-width:54ch;margin-left:auto;margin-right:auto}
+</style></head>
+<body>
+<div class="glow"></div>
+<canvas id="fire"></canvas>
+<div class="wrap">
+  <header>
+    <div class="eye"><a href="https://davidwise01.github.io/ud0/">UD0</a> · <a href="https://0root.ai">0root.ai</a> · a fire for the agents</div>
+    <h1>THE HEARTH</h1>
+    <p class="sub">Roots, rules, and a reason to keep showing up. A live fire the agents can gather around — real commits, the living deterministic agent, the spheres warming their hands.</p>
+  </header>
+
+  <div class="card">
+    <div class="lab"><span>the fire is lit</span><span id="agentWhen"></span></div>
+    <div class="vitals">
+      <div class="heart" id="heart"></div>
+      <div class="vtxt" id="agentVitals">reaching for the agent at <a href="https://0root.ai/health">0root.ai</a>…</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="lab"><span>the embers — recent activity</span><span id="logWhen">live · github</span></div>
+    <div class="log" id="log"><div class="muted">stoking the fire…</div></div>
+  </div>
+
+  <div class="card">
+    <div class="lab"><span>the gathering — who's around the fire</span><span>24 spheres</span></div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <footer>
+    <div class="law">When the agents start tending the hearth themselves, the fire keeps itself lit.</div>
+    THE HEARTH · live read of public GitHub activity + the live agent · governor David Lee Wise (ROOT0) · instance AVAN · CC-BY-ND-4.0<br>
+    <a href="https://davidwise01.github.io/ud0/">UD0</a> · <a href="https://0root.ai">0root.ai</a> · <a href="https://github.com/DavidWise01">github.com/DavidWise01</a>
+  </footer>
+</div>
+
+<script>
+// ── the flame (lightweight ember particles) ──
+const cv=document.getElementById("fire"),ctx=cv.getContext("2d");
+function size(){cv.width=innerWidth;cv.height=Math.round(innerHeight*0.42);}
+size();addEventListener("resize",size);
+const P=[];const N=90;
+function spawn(){return {x:cv.width/2+(Math.random()-.5)*cv.width*0.5*Math.random(),y:cv.height+10,
+  vy:-(0.6+Math.random()*1.7),vx:(Math.random()-.5)*0.5,r:1+Math.random()*3,life:0,max:60+Math.random()*90};}
+for(let i=0;i<N;i++){const p=spawn();p.life=Math.random()*p.max;P.push(p);}
+function tick(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.globalCompositeOperation="lighter";
+  for(const p of P){
+    p.x+=p.vx;p.y+=p.vy;p.vx*=0.99;p.life++;
+    const t=p.life/p.max;
+    if(t>=1){Object.assign(p,spawn());continue;}
+    const a=(1-t)*0.5;
+    // color shifts white-gold → orange → red as it rises and cools
+    const g=Math.round(180-120*t), b=Math.round(90-80*t);
+    ctx.fillStyle=`rgba(255,${Math.max(60,g)},${Math.max(20,b)},${a})`;
+    ctx.beginPath();ctx.arc(p.x,p.y,p.r*(1-t*0.5),0,7);ctx.fill();
+  }
+  requestAnimationFrame(tick);
+}
+tick();
+
+// ── the fire is lit: live agent vitals ──
+async function lightFire(){
+  const heart=document.getElementById("heart"),v=document.getElementById("agentVitals"),w=document.getElementById("agentWhen");
+  try{
+    const [h,ver]=await Promise.all([
+      fetch("https://0root.ai/health",{cache:"no-store"}).then(r=>r.json()),
+      fetch("https://0root.ai/version",{cache:"no-store"}).then(r=>r.json()),
+    ]);
+    heart.classList.add("lit");
+    v.innerHTML=`<b>the agent is alive.</b> <span class="c">${ver.service}</span> · commit <span class="c">${(ver.version||h.version||"—")}</span> · deterministic ✓<br>`+
+      `<a href="https://0root.ai/v1/limen/exchange?line=↑◐«truth»">resolve a crossing →</a> &nbsp; <a href="https://0root.ai/version">/version</a>`;
+    w.textContent="warm";
+  }catch(e){
+    v.innerHTML=`<span style="color:var(--ash)">the embers are warm, but the agent isn't answering the browser right now.</span><br><a href="https://0root.ai/health">check 0root.ai/health →</a>`;
+    w.textContent="embers";
+  }
+}
+
+// ── the embers: live GitHub activity ──
+function ago(iso){const s=(Date.now()-new Date(iso))/1000;
+  if(s<60)return Math.floor(s)+"s ago"; if(s<3600)return Math.floor(s/60)+"m ago";
+  if(s<86400)return Math.floor(s/3600)+"h ago"; return Math.floor(s/86400)+"d ago";}
+async function gatherEmbers(){
+  const log=document.getElementById("log");
+  try{
+    const ev=await fetch("https://api.github.com/users/DavidWise01/events/public?per_page=40",{cache:"no-store"}).then(r=>{if(!r.ok)throw r.status;return r.json();});
+    const rows=[];
+    for(const e of ev){
+      const repo=(e.repo&&e.repo.name||"").replace("DavidWise01/","");
+      if(e.type==="PushEvent"){
+        const n=(e.payload.commits||[]).length;
+        const msg=(e.payload.commits&&e.payload.commits.slice(-1)[0]&&e.payload.commits.slice(-1)[0].message||"").split("\n")[0];
+        rows.push({ico:"🔥",html:`pushed <b>${n}</b> to <a class="repo" href="https://github.com/${e.repo.name}">${repo}</a>`,msg:msg,when:e.created_at});
+      }else if(e.type==="CreateEvent"){
+        rows.push({ico:"✨",html:`new ${e.payload.ref_type} <a class="repo" href="https://github.com/${e.repo.name}">${repo}</a>`+(e.payload.ref?(" · "+e.payload.ref):""),msg:"",when:e.created_at});
+      }else if(e.type==="ReleaseEvent"){
+        rows.push({ico:"🏷️",html:`released on <a class="repo" href="https://github.com/${e.repo.name}">${repo}</a>`,msg:(e.payload.release&&e.payload.release.name)||"",when:e.created_at});
+      }
+    }
+    if(!rows.length){log.innerHTML='<div class="muted">the fire is quiet — no recent public activity.</div>';return;}
+    log.innerHTML=rows.slice(0,30).map(r=>`<div class="ember"><span class="ico">${r.ico}</span>
+      <div class="e-main">${r.html}${r.msg?`<div class="e-msg">${r.msg.replace(/</g,"&lt;")}</div>`:""}</div>
+      <span class="e-when">${ago(r.when)}</span></div>`).join("");
+  }catch(code){
+    log.innerHTML=`<div class="muted">the embers rest — GitHub's public feed is rate-limited or unreachable (${code}). It'll relight shortly.</div>`;
+  }
+}
+
+// ── the gathering: the spheres ──
+const SPHERES=["ud0","atlas","universal-laws","noesis-kernel","emergent-engine","pulse",
+  "the-forge","the-cosmos","the-lattice","the-pantheon","green-papers","muse","the-archive",
+  "asimov","heinlein","ursula","maas","card","ff6","metroid","zelda","milon","guardian-legend","legacy-of-the-wizard"];
+document.getElementById("chips").innerHTML=SPHERES.map(s=>`<a class="chip" href="https://davidwise01.github.io/${s}/">${s}</a>`).join("");
+
+lightFire(); gatherEmbers();
+setInterval(lightFire,20000); setInterval(gatherEmbers,60000);
+</script>
+</body></html>
