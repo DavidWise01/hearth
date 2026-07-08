@@ -4,6 +4,6 @@ slug  : hearth
 seal  : d8b9d035c6d503190b60bcd13e84a7f80cf7d4e0ed8a35b36e7d39719c15b0e5
 prev  : 36caf683181a737f1af65d6a084b351fcc33f416a83edb48d0848ac670a6f72e
 link  : f614557ab3042a8b7a35d358df6fa2b9e5ee41ae3655bfabfe2b485fd11432c2
-head  : 3447d3a0533aaf1e29a8bdc67a9774884fb3ae9dbc8a17064b7a008ca3c4ec90
+head  : 13f9ace173ef2e60af38912ba329b4afcb5a38b84a0e4495e8d30327f8c99cc2
 
 — the tether: link = sha256(index|slug|seal|prev). the chain head commits to the whole corpus.
